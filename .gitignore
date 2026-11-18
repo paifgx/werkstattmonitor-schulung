@@ -1,0 +1,8 @@
+/build*/
+/.vs/
+/CMakeUserPresets.json
+/local/
+/ai-output/
+/.env
+*.user
+__pycache__/

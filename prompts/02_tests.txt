@@ -1,0 +1,6 @@
+Schreibe zunächst zwei QtTest-Testfälle für den beigefügten Importvertrag.
+Fall 1 erhält das bisher gültige Verhalten. Fall 2 zeigt einen konkreten Fehler.
+Begründe die Erwartungswerte unabhängig vom Implementierungscode.
+Nenne Testname, Eingabe, erwartetes Ergebnis und Fehlerzeile.
+Erstelle keine neue Testbibliothek und ändere keine Produktionsdateien.
+Kennzeichne klar, dass du die Tests nicht selbst ausgeführt hast.

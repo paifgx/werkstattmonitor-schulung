@@ -1,0 +1,8 @@
+Analysiere den beigefügten Ausgangscode. Ändere noch nichts.
+Liefere höchstens fünf priorisierte Befunde als Tabelle:
+Datei und Funktion | beobachtetes Verhalten | konkrete Gegenprobe |
+Auswirkung | kleinster nächster Schritt.
+Trenne Fehler, Wartbarkeitsprobleme und offene Annahmen.
+Erfinde keine Architektur, Zugänge oder Kundenanforderungen.
+Prüfe besonders leere CSV-Felder, Zahlenkonvertierung und Ressourcenbesitz.
+Nenne genau, welchen zusätzlichen Kontext du für weitergehende Aussagen brauchst.

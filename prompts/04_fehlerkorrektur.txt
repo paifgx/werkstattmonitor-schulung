@@ -1,0 +1,6 @@
+Korrigiere ausschließlich parseTelemetry gemäß docs/02_Importvertrag.md.
+Erhalte Signatur, gültige Beispieldaten und Summary-Ergebnisse.
+Testfehler dürfen nicht durch Abschwächen der Erwartungen behoben werden.
+Kein stilles Reparieren ungültiger Daten und kein teilweiser Import.
+Liefere zuerst einen Plan in maximal fünf Schritten, dann einen kleinen Diff.
+Jede fachliche Verhaltensänderung muss einem Vertragsabschnitt und Test entsprechen.

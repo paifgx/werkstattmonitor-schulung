@@ -1,0 +1,7 @@
+Prüfe die beigefügte Qt-Änderung zur Wiedergabe fiktiver Messwerte.
+Bleibt die Ereignisschleife während simulierter Wartezeit frei?
+Sind Timer und Widgets an einen QObject-Elternknoten gebunden?
+Funktionieren Stopp, Neustart und Zerstörung während der Wiedergabe?
+Suche nach blockierendem Schlafen, ungebundenen Lambdas, processEvents-
+Workarounds und Änderungen am Parser. Keine automatische Patch-Anwendung.
+Liefere konkrete Gegenbeispiele und passende Tests; keine pauschale Freigabe.

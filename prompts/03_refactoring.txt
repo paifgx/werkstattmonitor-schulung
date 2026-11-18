@@ -1,0 +1,7 @@
+Aufgabe: Trenne Dateizugriff, Parser und Auswertung in kleine Dateien.
+Erhalte die öffentliche Schnittstelle in src/telemetry.h und das Verhalten
+gültiger Eingaben. Ändere noch keine Validierungsregeln.
+Nutze automatische Lebensdauer für QFile. Keine neuen Abhängigkeiten,
+keine Threads, keine Änderungen außerhalb src/ und der Quellliste in CMakeLists.txt.
+Liefere einen kleinen, überprüfbaren Diff und erkläre jede Verhaltensänderung.
+Liste die danach lokal auszuführenden Tests, ohne einen Erfolg zu behaupten.

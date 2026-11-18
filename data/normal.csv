@@ -1,0 +1,6 @@
+sequence;rpm;temperature_c;state
+1;0;22.0;IDLE
+2;1200;36.5;RUN
+3;1800;48.0;RUN
+4;0;65.5;ALARM
+5;0;28.0;IDLE

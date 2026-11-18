@@ -1,0 +1,5 @@
+sequence;rpm;temperature_c;state
+1;1200;36.5;RUN
+2;;42.0;RUN
+3;1000;NaN;RUN
+4;900;40.0;UNKNOWN
