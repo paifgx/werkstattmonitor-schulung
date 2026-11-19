@@ -1,5 +1,4 @@
 #include "telemetry.h"
-#include <QFile>
 
 // Deliberately simplified legacy code for this training.
 namespace lab {
@@ -20,31 +19,5 @@ ImportResult parseTelemetry(const QString &text) {
         result.samples.append(sample);
     }
     return result;
-}
-ImportResult loadTelemetry(const QString &path) {
-    QFile *file = new QFile(path);
-    if (!file->open(QIODevice::ReadOnly)) {
-
-        return {{}, {{0, "Datei konnte nicht geöffnet werden"}}};
-    }
-    auto result = parseTelemetry(QString::fromUtf8(file->readAll()));
-    delete file;
-    return result;
-}
-Summary summarize(const QVector<Sample> &samples) {
-    Summary result;
-    for (int i = 0; i < samples.size(); ++i) {
-        result.count++;
-        if (samples.at(i).rpm > result.peakRpm) result.peakRpm = samples.at(i).rpm;
-        result.meanTemperatureC += samples.at(i).temperatureC;
-        if (samples.at(i).state == State::Alarm) result.alarms++;
-    }
-    if (result.count) result.meanTemperatureC /= result.count;
-    return result;
-}
-QString stateText(State state) {
-    if (state == State::Running) return "RUN";
-    if (state == State::Alarm) return "ALARM";
-    return "IDLE";
 }
 }
