@@ -4,7 +4,6 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QTableWidget>
-#include <QThread>
 #include <QTimer>
 #include <QVBoxLayout>
 
@@ -42,7 +41,11 @@ HmiWindow::HmiWindow(const QString &path, QWidget *parent) : QWidget(parent) {
         heartbeat_->setText(QString("UI-Ticks: %1").arg(++ticks_));
     });
     heartbeatTimer->start(20);
+    replayTimer_ = new QTimer(this);
+    replayTimer_->setInterval(120);
+    connect(replayTimer_, &QTimer::timeout, this, &HmiWindow::replayNext);
     connect(start_, &QPushButton::clicked, this, &HmiWindow::startReplay);
+    connect(stop_, &QPushButton::clicked, this, &HmiWindow::stopReplay);
 
 }
 void HmiWindow::appendSample(const lab::Sample &sample) {
@@ -54,17 +57,42 @@ void HmiWindow::appendSample(const lab::Sample &sample) {
     table_->setItem(row, 3, new QTableWidgetItem(lab::stateText(sample.state)));
 }
 
+void HmiWindow::setReplaying(bool replaying) {
+    start_->setEnabled(!replaying);
+    stop_->setEnabled(replaying);
+}
+
 void HmiWindow::startReplay() {
+    replayTimer_->stop();
+    pending_.clear();
+    next_ = 0;
     table_->setRowCount(0);
-    auto result = lab::loadTelemetry(path_->text());
-    if (!result.ok()) { status_->setText(result.errors.first().message); return; }
-    start_->setEnabled(false);
-    stop_->setEnabled(true);
-    for (const auto &sample : result.samples) {
-        QThread::msleep(120);
-        appendSample(sample);
+    const auto result = lab::loadTelemetry(path_->text());
+    if (!result.ok()) {
+        const auto &error = result.errors.first();
+        status_->setText(QString("Zeile %1: %2").arg(error.line).arg(error.message));
+        setReplaying(false);
+        return;
     }
-    status_->setText("Fertig");
-    start_->setEnabled(true);
-    stop_->setEnabled(false);
+    pending_ = result.samples;
+    status_->setText("Wiedergabe läuft");
+    setReplaying(true);
+    replayTimer_->start();
+}
+
+void HmiWindow::stopReplay() {
+    replayTimer_->stop();
+    pending_.clear();
+    status_->setText("Gestoppt");
+    setReplaying(false);
+}
+
+void HmiWindow::replayNext() {
+    if (next_ < pending_.size()) appendSample(pending_.at(next_++));
+    if (next_ >= pending_.size()) {
+        replayTimer_->stop();
+        pending_.clear();
+        status_->setText("Fertig");
+        setReplaying(false);
+    }
 }

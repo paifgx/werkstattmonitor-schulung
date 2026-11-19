@@ -13,7 +13,13 @@ public:
     explicit HmiWindow(const QString &path, QWidget *parent = nullptr);
 private:
     void startReplay();
+    void stopReplay();
+    void replayNext();
+    void setReplaying(bool replaying);
     void appendSample(const lab::Sample &sample);
+    QTimer *replayTimer_;
+    QVector<lab::Sample> pending_;
+    int next_ = 0;
     QLineEdit *path_;
     QPushButton *start_;
     QPushButton *stop_;
