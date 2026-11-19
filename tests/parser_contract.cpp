@@ -7,6 +7,33 @@
 class ParserContract : public QObject {
     Q_OBJECT
 private slots:
+    void validFieldsWithWhitespaceAndSequenceGap() {
+        const auto result = lab::parseTelemetry(
+            "sequence;rpm;temperature_c;state\n"
+            " 1 ; 1200 ; 36.5 ; RUN \n"
+            " 3 ; 0 ; -20 ; ALARM \n");
+        QVERIFY(result.ok());
+        QCOMPARE(result.samples.size(), 2);
+        QCOMPARE(result.samples.at(0).sequence, 1);
+        QCOMPARE(result.samples.at(0).rpm, 1200);
+        QCOMPARE(result.samples.at(0).temperatureC, 36.5);
+        QCOMPARE(result.samples.at(0).state, lab::State::Running);
+        QCOMPARE(result.samples.at(1).sequence, 3);
+        QCOMPARE(result.samples.at(1).rpm, 0);
+        QCOMPARE(result.samples.at(1).temperatureC, -20.0);
+        QCOMPARE(result.samples.at(1).state, lab::State::Alarm);
+    }
+    void emptyRpmRejectsEntireImport() {
+        const auto result = lab::parseTelemetry(
+            "sequence;rpm;temperature_c;state\n"
+            "1;1200;36.5;RUN\n"
+            "2;;42;ALARM\n");
+        QVERIFY(!result.ok());
+        QVERIFY(result.samples.isEmpty());
+        QCOMPARE(result.errors.size(), 1);
+        QCOMPARE(result.errors.first().line, 3);
+        QVERIFY(!result.errors.first().message.isEmpty());
+    }
     void invalid_data() {
         QTest::addColumn<QString>("row");
         QTest::newRow("empty-rpm") << "1;;42.0;RUN";
@@ -21,10 +48,18 @@ private slots:
         QTest::newRow("inf") << "1;1;inf;RUN";
         QTest::newRow("comma") << "1;1;42,5;RUN";
         QTest::newRow("exponent") << "1;1;1e2;RUN";
+        QTest::newRow("above-maximum-precision") << "1;1;150.00000000000000001;RUN";
+        QTest::newRow("below-minimum-precision") << "1;1;-20.00000000000000001;RUN";
         QTest::newRow("too-cold") << "1;1;-20.1;RUN";
         QTest::newRow("too-hot") << "1;1;150.1;RUN";
         QTest::newRow("unknown") << "1;1;42.0;READY";
         QTest::newRow("case") << "1;1;42.0;run";
+        QTest::newRow("sequence-overflow") << "9999999999999999999999;1;42;RUN";
+        QTest::newRow("sequence-plus") << "+1;1;42;RUN";
+        QTest::newRow("temperature-plus") << "1;1;+42;RUN";
+        QTest::newRow("temperature-no-fraction") << "1;1;42.;RUN";
+        QTest::newRow("temperature-no-integer") << "1;1;.5;RUN";
+        QTest::newRow("non-ascii-digit") << QString::fromUtf8("١;1;42;RUN");
         QTest::newRow("zero-seq") << "0;1;42.0;RUN";
         QTest::newRow("negative-seq") << "-1;1;42.0;RUN";
     }
@@ -47,9 +82,19 @@ private slots:
         QCOMPARE(result.samples.at(1).rpm, 24000);
         QCOMPARE(result.samples.first().temperatureC, -20.0);
     }
+    void decimalPointUnderGermanLocale() {
+        const QLocale old = QLocale();
+        QLocale::setDefault(QLocale(QLocale::German));
+        const auto result = lab::parseTelemetry(
+            "sequence;rpm;temperature_c;state\n1;1;36.5;RUN\n");
+        QLocale::setDefault(old);
+        QVERIFY(result.ok());
+        QCOMPARE(result.samples.first().temperatureC, 36.5);
+    }
     void header_data() {
         QTest::addColumn<QString>("text");
         QTest::newRow("empty") << "";
+        QTest::newRow("header-spaces") << " sequence;rpm;temperature_c;state\n1;1;1;RUN";
         QTest::newRow("wrong-header") << "seq;rpm;temp;state\n1;1;1;RUN";
         QTest::newRow("header-only") << "sequence;rpm;temperature_c;state\n";
     }
@@ -78,6 +123,29 @@ private slots:
         QVERIFY(!result.ok());
         QVERIFY(result.samples.isEmpty());
         QCOMPARE(result.errors.first().line, 3);
+    }
+    void oversizedFileIsAFileError() {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        QFile file(dir.filePath("large.csv"));
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        const QByteArray header("sequence;rpm;temperature_c;state\n1;1;42;RUN\n");
+        QCOMPARE(file.write(header), qint64(header.size()));
+        const QByteArray padding(1024 * 1024, ' ');
+        QCOMPARE(file.write(padding), qint64(padding.size()));
+        file.close();
+        const auto result = lab::loadTelemetry(file.fileName());
+        QVERIFY(!result.ok());
+        QVERIFY(result.samples.isEmpty());
+        QCOMPARE(result.errors.first().line, 0);
+    }
+    void directoryIsAFileError() {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const auto result = lab::loadTelemetry(dir.path());
+        QVERIFY(!result.ok());
+        QVERIFY(result.samples.isEmpty());
+        QCOMPARE(result.errors.first().line, 0);
     }
     void fileLoading() {
         QTemporaryDir dir;

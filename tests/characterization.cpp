@@ -17,6 +17,18 @@ private slots:
         QCOMPARE(summary.alarms, 1);
         QVERIFY(qAbs(summary.meanTemperatureC - 40.0) < 0.000001);
     }
+    void independentValidInput() {
+        const auto result = lab::parseTelemetry(
+            "sequence;rpm;temperature_c;state\n"
+            "1;300;10;RUN\n2;600;20;ALARM\n3;0;30;IDLE\n");
+        QVERIFY(result.ok());
+        QCOMPARE(result.samples.size(), 3);
+        const auto summary = lab::summarize(result.samples);
+        QCOMPARE(summary.count, 3);
+        QCOMPARE(summary.peakRpm, 600);
+        QCOMPARE(summary.meanTemperatureC, 20.0);
+        QCOMPARE(summary.alarms, 1);
+    }
     void emptySummary() {
         const auto summary = lab::summarize({});
         QCOMPARE(summary.count, 0);
